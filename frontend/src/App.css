@@ -28,6 +28,14 @@ a:hover {
   display: grid;
   grid-template-columns: 3fr 2fr;
   min-height: 100vh;
+  position: relative;
+}
+
+.auth-brand-logo {
+  position: absolute;
+  top: 2.5rem;
+  left: 2.5rem;
+  z-index: 2;
 }
 
 .auth-illustration {
@@ -61,9 +69,14 @@ a:hover {
   gap: 1.5rem;
 }
 
-.auth-logo img {
+.auth-brand-logo img,
+.auth-form-logo img {
   width: 48px;
   height: 48px;
+}
+
+.auth-form-logo {
+  display: none;
 }
 
 .auth-header h1 {
@@ -205,6 +218,15 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .auth-brand-logo {
+    display: none;
+  }
+
+  .auth-form-logo {
+    display: block;
+    align-self: flex-start;
+  }
+
   .auth-illustration {
     min-height: 240px;
   }
@@ -221,6 +243,10 @@ a:hover {
 @media (max-width: 640px) {
   body {
     background: #ffffff;
+  }
+
+  .auth-form-logo {
+    margin-bottom: 0.5rem;
   }
 
   .auth-illustration {

@@ -6,12 +6,17 @@ import demoImage from '../assets/demo-image.svg';
 const AuthLayout = ({ title, subtitle, children, footer }) => {
   return (
     <div className="auth-container">
+      <div className="auth-brand-logo">
+        <Link to="/">
+          <img src={logo} alt="Demo logo" />
+        </Link>
+      </div>
       <div className="auth-illustration">
         <img src={demoImage} alt="Demo" />
       </div>
       <div className="auth-form">
         <div className="auth-card">
-          <div className="auth-logo">
+          <div className="auth-form-logo">
             <Link to="/">
               <img src={logo} alt="Demo logo" />
             </Link>
