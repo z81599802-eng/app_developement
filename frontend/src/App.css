@@ -27,6 +27,7 @@ a:hover {
 .auth-container {
   display: grid;
   grid-template-columns: 3fr 2fr;
+  grid-template-areas: 'illustration form';
   min-height: 100vh;
   position: relative;
 }
@@ -39,6 +40,7 @@ a:hover {
 }
 
 .auth-illustration {
+  grid-area: illustration;
   background-color: #25293c;
   display: flex;
   align-items: center;
@@ -52,6 +54,7 @@ a:hover {
 }
 
 .auth-form {
+  grid-area: form;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,6 +230,9 @@ a:hover {
 @media (max-width: 1024px) {
   .auth-container {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'form'
+      'illustration';
   }
 
   .auth-brand-logo {
@@ -256,11 +262,17 @@ a:hover {
     background: #ffffff;
   }
 
+
+  .auth-container {
+    grid-template-areas: 'form';
+
   .auth-form-logo {
     margin-bottom: 0.5rem;
+
   }
 
   .auth-illustration {
+    display: none;
     padding: 1.5rem;
     min-height: 180px;
   }
