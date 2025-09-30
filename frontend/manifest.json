@@ -1,0 +1,9 @@
+{
+  "name": "PWA Auth",
+  "short_name": "Auth",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#25293c",
+  "theme_color": "#7367f0",
+  "icons": []
+}
