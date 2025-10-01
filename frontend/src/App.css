@@ -262,13 +262,12 @@ a:hover {
     background: #ffffff;
   }
 
-
   .auth-container {
     grid-template-areas: 'form';
+  }
 
   .auth-form-logo {
     margin-bottom: 0.5rem;
-
   }
 
   .auth-illustration {
