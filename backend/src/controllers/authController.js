@@ -105,29 +105,40 @@ export const profile = async (req, res) => {
   }
 };
 
-export const resetPassword = async (req, res) => {
+export const requestPasswordReset = async (req, res) => {
   const { email } = req.body;
 
-  try {
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required to reset password.' });
-    }
+  // Always respond with a neutral success message to avoid leaking user existence.
+  const successMessage = {
+    message: 'If an account with that email exists, a password reset link has been sent.'
+  };
 
+  if (!email) {
+    // Without an email we cannot process the request, but respond neutrally to avoid enumeration.
+    return res.status(200).json(successMessage);
+  }
+
+  try {
+    // Look up the user by email.
     const [rows] = await pool.execute('SELECT id, email FROM users WHERE email = ? LIMIT 1', [email]);
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'No account found with that email.' });
+    if (rows.length > 0) {
+      const user = rows[0];
+
+      // Generate a short-lived token and corresponding reset link.
+      const resetToken = generateToken({ id: user.id }, '1h');
+      const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+
+      // Attempt to send the password reset email.
+      await sendResetEmail({ to: email, link: resetLink });
     }
 
-    const user = rows[0];
-    const resetToken = generateToken({ id: user.id }, '1h');
-    const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
-
-    await sendResetEmail({ to: email, link: resetLink });
-
-    return res.status(200).json({ message: 'Password reset email sent successfully.' });
+    // Always return a success response regardless of whether the user exists.
+    return res.status(200).json(successMessage);
   } catch (error) {
-    console.error('Reset password error:', error);
-    return res.status(500).json({ message: 'Failed to send reset password email.' });
+    console.error('Request password reset error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to process password reset request at this time.' });
   }
 };
