@@ -1,9 +1,15 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.svg';
-import demoImage from '../assets/demo-image.svg';
+import loginImage from '../assets/login-image.svg';
 
-const AuthLayout = ({ title, subtitle, children, footer }) => {
+const AuthLayout = ({
+  title,
+  subtitle,
+  children,
+  footer,
+  illustrationSrc = loginImage
+}) => {
   return (
     <div className="auth-container">
       <div className="auth-brand-logo">
@@ -12,7 +18,7 @@ const AuthLayout = ({ title, subtitle, children, footer }) => {
         </Link>
       </div>
       <div className="auth-illustration">
-        <img src={demoImage} alt="Demo" />
+        <img src={illustrationSrc} alt="Authentication illustration" />
       </div>
       <div className="auth-form">
         <div className="auth-card">
@@ -37,7 +43,8 @@ AuthLayout.propTypes = {
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
-  footer: PropTypes.node
+  footer: PropTypes.node,
+  illustrationSrc: PropTypes.string
 };
 
 AuthLayout.defaultProps = {

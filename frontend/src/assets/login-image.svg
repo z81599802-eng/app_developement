@@ -1,0 +1,13 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" rx="24" fill="#F4F6FB"/>
+  <path d="M120 120C120 95.6995 139.699 76 164 76C188.301 76 208 95.6995 208 120C208 144.301 188.301 164 164 164C139.699 164 120 144.301 120 120Z" fill="#4C6EF5" opacity="0.8"/>
+  <path d="M192 196C192 175.013 209.013 158 230 158C250.987 158 268 175.013 268 196C268 216.987 250.987 234 230 234C209.013 234 192 216.987 192 196Z" fill="#15AABF" opacity="0.8"/>
+  <path d="M92 208C92 187.013 109.013 170 130 170H220C240.987 170 258 187.013 258 208C258 228.987 240.987 246 220 246H130C109.013 246 92 228.987 92 208Z" fill="#748FFC" opacity="0.6"/>
+  <rect x="90" y="92" width="220" height="140" rx="20" fill="white"/>
+  <rect x="118" y="122" width="164" height="12" rx="6" fill="#DEE2E6"/>
+  <rect x="118" y="146" width="132" height="12" rx="6" fill="#ADB5BD"/>
+  <rect x="118" y="170" width="100" height="12" rx="6" fill="#BAC8FF"/>
+  <rect x="118" y="194" width="72" height="12" rx="6" fill="#74C0FC"/>
+  <circle cx="310" cy="102" r="24" fill="#FFD43B"/>
+  <path d="M304 104L308 108L316 100" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
