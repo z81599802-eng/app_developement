@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
   res.json({ status: 'OK', message: 'PWA Auth API' });
 });
 
-app.use('/', authRoutes);
+app.use('/api', authRoutes);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDistPath, 'index.html'));
