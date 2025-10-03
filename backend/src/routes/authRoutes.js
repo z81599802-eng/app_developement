@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/authMiddleware.js';
 import {
   login,
   profile,
+  resetPassword,
   requestPasswordReset,
   signup
 } from '../controllers/authController.js';
@@ -13,5 +14,6 @@ router.post('/signup', signup);
 router.post('/login', login);
 router.get('/profile', authenticate, profile);
 router.post('/reset-password-request', requestPasswordReset);
+router.post('/reset-password', resetPassword);
 
 export default router;
