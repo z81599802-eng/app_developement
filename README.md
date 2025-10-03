@@ -1,4 +1,4 @@
-# PWA Authentication Demo
+# PWA Based Web app 
 
 Full-stack Progressive Web App demonstrating a modern authentication flow with a React (Vite) frontend and a Node.js + Express + MySQL backend.
 
