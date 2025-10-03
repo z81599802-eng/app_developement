@@ -142,3 +142,63 @@ export const requestPasswordReset = async (req, res) => {
       .json({ message: 'Unable to process password reset request at this time.' });
   }
 };
+
+export const resetPassword = async (req, res) => {
+  const { token, password, confirmPassword } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: 'A valid reset token is required.' });
+  }
+
+  if (!password || !confirmPassword) {
+    return res
+      .status(400)
+      .json({ message: 'Password and confirmation are required.' });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: 'Passwords do not match.' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded?.id) {
+      return res.status(400).json({ message: 'Invalid reset token.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const [result] = await pool.execute('UPDATE users SET password_hash = ? WHERE id = ?', [
+      passwordHash,
+      decoded.id
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'User associated with this token was not found.' });
+    }
+
+    return res
+      .status(200)
+      .json({ message: 'Password has been reset successfully. You can now sign in.' });
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res
+        .status(400)
+        .json({ message: 'Reset link has expired. Please request a new password reset link.' });
+    }
+
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(400).json({ message: 'Reset token is invalid. Please request a new link.' });
+    }
+
+    console.error('Reset password error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to reset password at this time. Please try again later.' });
+  }
+};
