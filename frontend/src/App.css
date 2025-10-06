@@ -289,3 +289,265 @@ a:hover {
     width: 100%;
   }
 }
+
+.dashboard-layout {
+  min-height: 100vh;
+  display: flex;
+  background: #f5f5f8;
+}
+
+.dashboard-sidebar {
+  background-color: #25293c;
+  color: #ffffff;
+  flex: 0 0 20%;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  position: relative;
+  transition: transform 0.3s ease;
+  z-index: 30;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+}
+
+.sidebar-logo {
+  width: 48px;
+  height: auto;
+}
+
+.mobile-close-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.mobile-close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  color: #ffffff;
+  font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(115, 103, 240, 0.2);
+}
+
+.sidebar-link.active {
+  background-color: #7367f0;
+  color: #ffffff;
+}
+
+.sidebar-logout {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: none;
+  background: none;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar-logout:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logout svg {
+  font-size: 1.25rem;
+}
+
+.dashboard-overlay {
+  display: none;
+}
+
+.dashboard-content {
+  flex: 1;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-mobile-header {
+  display: none;
+}
+
+.mobile-menu-button,
+.mobile-logout-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.mobile-menu-button:hover,
+.mobile-logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.mobile-logo {
+  height: 32px;
+}
+
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: #11142d;
+}
+
+.dashboard-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  color: #25293c;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.section-welcome {
+  max-width: 520px;
+}
+
+.section-welcome h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #11142d;
+}
+
+.section-subtitle {
+  margin-top: 0.75rem;
+  color: #7a7f9a;
+  font-size: 1.05rem;
+}
+
+.section-error {
+  margin-top: 0.75rem;
+  color: #d64c42;
+  font-weight: 600;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-sidebar {
+    flex-basis: 240px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    position: relative;
+  }
+
+  .dashboard-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    transform: translateX(-100%);
+    box-shadow: 16px 0 40px rgba(17, 19, 32, 0.35);
+  }
+
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .mobile-close-button {
+    display: inline-flex;
+  }
+
+  .dashboard-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 19, 32, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 20;
+  }
+
+  .dashboard-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .dashboard-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background-color: #25293c;
+  }
+
+  .dashboard-main {
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-sidebar {
+    max-width: 260px;
+  }
+
+  .dashboard-main {
+    padding: 2rem 1.25rem;
+  }
+
+  .section-welcome h1 {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+  }
+}

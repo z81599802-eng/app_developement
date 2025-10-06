@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'; // final
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'; // previous
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
