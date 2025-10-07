@@ -4,6 +4,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import { authenticate } from './middleware/authMiddleware.js';
+import {
+  getDashboardOverview,
+  getPerformanceOverview,
+  getRevenueOverview
+} from './controllers/dashboardController.js';
 
 const app = express();
 
@@ -24,6 +30,11 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', authRoutes);
+
+app.get('/api/dashboard', authenticate, getDashboardOverview);
+app.get('/api/performance', authenticate, getPerformanceOverview);
+app.get('/api/revenue', authenticate, getRevenueOverview);
+
 app.use('/api/dashboard', dashboardRoutes);
 
 app.get('*', (req, res) => {

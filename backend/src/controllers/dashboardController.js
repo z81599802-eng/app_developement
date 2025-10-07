@@ -4,6 +4,19 @@ const sectionMessages = {
   revenue: 'Welcome to Revenue'
 };
 
+const respondWithSection = (res, section) => {
+  const normalizedSection = section?.toLowerCase();
+
+  if (!normalizedSection || !sectionMessages[normalizedSection]) {
+    return res.status(404).json({ message: 'Requested dashboard section was not found.' });
+  }
+
+  return res.status(200).json({
+    section: normalizedSection,
+    message: sectionMessages[normalizedSection]
+  });
+};
+
 export const getDashboardStatus = (req, res) => {
   return res.status(200).json({
     message: 'Dashboard access verified.',
@@ -15,14 +28,11 @@ export const getDashboardStatus = (req, res) => {
 };
 
 export const getDashboardSection = (req, res) => {
-  const section = req.params.section?.toLowerCase();
-
-  if (!section || !sectionMessages[section]) {
-    return res.status(404).json({ message: 'Requested dashboard section was not found.' });
-  }
-
-  return res.status(200).json({
-    section,
-    message: sectionMessages[section]
-  });
+  return respondWithSection(res, req.params.section);
 };
+
+export const getDashboardOverview = (req, res) => respondWithSection(res, 'dashboard');
+
+export const getPerformanceOverview = (req, res) => respondWithSection(res, 'performance');
+
+export const getRevenueOverview = (req, res) => respondWithSection(res, 'revenue');
