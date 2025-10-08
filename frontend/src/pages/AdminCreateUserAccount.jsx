@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import resolveAdminBaseUrl from '../utils/resolveAdminBaseUrl.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const PAGE_OPTIONS = [
@@ -25,10 +26,7 @@ const AdminCreateUserAccountPage = () => {
       return null;
     }
   }, []);
-  const adminBaseUrl = useMemo(() => {
-    const normalized = API_BASE_URL.replace(/\/?api\/?$/, '');
-    return normalized === API_BASE_URL ? '' : normalized;
-  }, []);
+  const adminBaseUrl = useMemo(() => resolveAdminBaseUrl(API_BASE_URL), []);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);

@@ -2,15 +2,13 @@ import { useMemo, useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
+import resolveAdminBaseUrl from '../utils/resolveAdminBaseUrl.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const AdminSignupPage = () => {
   const navigate = useNavigate();
-  const adminBaseUrl = useMemo(() => {
-    const normalized = API_BASE_URL.replace(/\/?api\/?$/, '');
-    return normalized === API_BASE_URL ? '' : normalized;
-  }, []);
+  const adminBaseUrl = useMemo(() => resolveAdminBaseUrl(API_BASE_URL), []);
   const [formData, setFormData] = useState({
     adminName: '',
     email: '',
