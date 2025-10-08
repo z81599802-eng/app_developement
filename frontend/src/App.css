@@ -119,7 +119,22 @@ a:hover {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.form-control select {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #d8d6de;
+  font-size: 1rem;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
 .form-control input:focus {
+  outline: none;
+  border-color: #7367f0;
+  box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.12);
+}
+
+.form-control select:focus {
   outline: none;
   border-color: #7367f0;
   box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.12);
@@ -221,10 +236,198 @@ a:hover {
   color: #28c76f;
 }
 
+.status-message.info {
+  background: rgba(115, 103, 240, 0.12);
+  color: #7367f0;
+}
+
+.secondary-button {
+  background: #ffffff;
+  color: #7367f0;
+  border: 1px solid rgba(115, 103, 240, 0.4);
+  padding: 0.75rem 1.25rem;
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: rgba(115, 103, 240, 0.08);
+  box-shadow: 0 12px 24px rgba(115, 103, 240, 0.15);
+}
+
+.dashboard-iframe {
+  width: 100%;
+  min-height: 520px;
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(47, 51, 73, 0.12);
+  background-color: #ffffff;
+}
+
+.admin-console {
+  max-width: 1080px;
+  margin: 2.5rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 30px 60px rgba(115, 103, 240, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.admin-console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-console-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #2f3349;
+}
+
+.admin-console-header p {
+  margin: 0.35rem 0 0;
+  color: #7a7f9a;
+}
+
+.admin-console-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #7367f0;
+  font-weight: 600;
+}
+
+.admin-console-section {
+  background: rgba(115, 103, 240, 0.03);
+  border-radius: 20px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-console-section h2 {
+  margin: 0;
+  color: #2f3349;
+  font-size: 1.5rem;
+}
+
+.admin-console-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.admin-console-form .primary-button {
+  justify-self: start;
+}
+
+.admin-console-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-user-chip {
+  border: 1px solid rgba(115, 103, 240, 0.2);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  color: #2f3349;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  gap: 0.25rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-user-chip:hover,
+.admin-user-chip.active {
+  border-color: #7367f0;
+  box-shadow: 0 12px 24px rgba(115, 103, 240, 0.18);
+}
+
+.admin-user-chip small {
+  color: #7a7f9a;
+}
+
+.admin-links-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.admin-link-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(115, 103, 240, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-link-page {
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #7367f0;
+}
+
+.admin-link-url {
+  color: #2f3349;
+  word-break: break-word;
+}
+
 .auth-footer {
   text-align: center;
   color: #6f7391;
   font-size: 0.95rem;
+}
+
+.admin-link-url {
+  color: #2f3349;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .admin-console {
+    margin: 2rem 1.5rem;
+    padding: 1.75rem;
+  }
+
+  .admin-console-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-console-profile {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-console {
+    margin: 1.5rem 1rem;
+    padding: 1.5rem;
+  }
+
+  .admin-console-form {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-iframe {
+    min-height: 420px;
+  }
 }
 
 @media (max-width: 1024px) {

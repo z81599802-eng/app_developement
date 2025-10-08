@@ -4,6 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import apiRoutes from './routes/apiRoutes.js';
 import { authenticate } from './middleware/authMiddleware.js';
 import {
   getDashboardOverview,
@@ -29,7 +31,9 @@ app.get('/', (req, res) => {
   res.json({ status: 'OK', message: 'PWA Auth API' });
 });
 
+app.use('/admin', adminRoutes);
 app.use('/api', authRoutes);
+app.use('/api', apiRoutes);
 
 app.get('/api/dashboard', authenticate, getDashboardOverview);
 app.get('/api/performance', authenticate, getPerformanceOverview);

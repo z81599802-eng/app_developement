@@ -118,7 +118,9 @@ const DashboardLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userProfile');
     sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('userProfile');
     if (isMobileViewport) {
       setIsMobileMenuOpen(false);
     }

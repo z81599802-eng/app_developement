@@ -9,13 +9,24 @@ const SectionWelcome = ({ section }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [animate, setAnimate] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState('');
 
-  const endpoints = useMemo(
-    () => ({
-      dashboard: `${API_BASE_URL}/dashboard`,
-      performance: `${API_BASE_URL}/performance`,
-      revenue: `${API_BASE_URL}/revenue`
-    }),
+  const getStoredProfile = useMemo(
+    () => () => {
+      const storedProfile =
+        localStorage.getItem('userProfile') || sessionStorage.getItem('userProfile');
+
+      if (!storedProfile) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(storedProfile);
+      } catch (parseError) {
+        console.error('Unable to parse stored user profile', parseError);
+        return null;
+      }
+    },
     []
   );
 
@@ -26,12 +37,23 @@ const SectionWelcome = ({ section }) => {
       setLoading(true);
       setError('');
       setMessage(`Welcome to ${displayName}`);
+      setIframeUrl('');
       setAnimate(true);
 
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
       if (!token) {
         if (isMounted) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      const profile = getStoredProfile();
+
+      if (!profile?.email) {
+        if (isMounted) {
+          setError('Unable to determine the logged in user.');
           setLoading(false);
         }
         return;
@@ -41,42 +63,49 @@ const SectionWelcome = ({ section }) => {
         if (response.status === 401) {
           localStorage.removeItem('authToken');
           sessionStorage.removeItem('authToken');
+          localStorage.removeItem('userProfile');
+          sessionStorage.removeItem('userProfile');
           window.location.replace('/login');
           return false;
         }
 
         if (!response.ok) {
-          throw new Error('Unable to fetch dashboard message');
+          throw new Error('Unable to fetch dashboard content');
         }
 
         const data = await response.json();
 
-        if (isMounted && data?.message) {
-          setMessage(data.message);
+        if (isMounted) {
+          if (data?.link) {
+            setIframeUrl(data.link);
+          }
+
+          if (data?.message) {
+            setMessage(data.message);
+          }
         }
 
         return true;
       };
 
       try {
-        const targetEndpoint = endpoints[section] || `${API_BASE_URL}/dashboard/${section}`;
-        const fallbackEndpoint = `${API_BASE_URL}/dashboard/${section}`;
-
-        const fetchWithAuth = (url) =>
-          fetch(url, {
+        const response = await fetch(
+          `${API_BASE_URL}/dashboardlinks?email=${encodeURIComponent(profile.email)}&page=${section}`,
+          {
             headers: {
               Authorization: `Bearer ${token}`
             }
-          });
+          }
+        );
 
-        let response = await fetchWithAuth(targetEndpoint);
-
-        if (
-          response.status !== 401 &&
-          !response.ok &&
-          targetEndpoint !== fallbackEndpoint
-        ) {
-          response = await fetchWithAuth(fallbackEndpoint);
+        if (response.status === 404) {
+          await resolveResponse(
+            new Response(
+              JSON.stringify({ message: `Welcome to ${displayName}` }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
+            )
+          );
+          return;
         }
 
         const handled = await resolveResponse(response);
@@ -87,7 +116,7 @@ const SectionWelcome = ({ section }) => {
       } catch (err) {
         console.error(err);
         if (isMounted) {
-          setError('Unable to load the latest welcome message.');
+          setError('Unable to load the latest dashboard content.');
           setMessage(`Welcome to ${displayName}`);
         }
       } finally {
@@ -102,7 +131,7 @@ const SectionWelcome = ({ section }) => {
     return () => {
       isMounted = false;
     };
-  }, [section, displayName, endpoints]);
+  }, [section, displayName, getStoredProfile]);
 
   useEffect(() => {
     if (!animate) {
@@ -122,13 +151,29 @@ const SectionWelcome = ({ section }) => {
       role="status"
       aria-live="polite"
     >
-      <h1>{message}</h1>
-      {loading ? (
-        <p className="section-subtitle">Preparing insights for your {displayName.toLowerCase()}.</p>
-      ) : error ? (
-        <p className="section-error">{error}</p>
+      {iframeUrl ? (
+        <iframe
+          title={`${displayName} insights`}
+          src={iframeUrl}
+          className="dashboard-iframe"
+          loading="lazy"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        />
       ) : (
-        <p className="section-subtitle">Here&apos;s where you can track your {displayName.toLowerCase()} metrics.</p>
+        <>
+          <h1>{message}</h1>
+          {loading ? (
+            <p className="section-subtitle">
+              Preparing insights for your {displayName.toLowerCase()}.
+            </p>
+          ) : error ? (
+            <p className="section-error">{error}</p>
+          ) : (
+            <p className="section-subtitle">
+              Here&apos;s where you can track your {displayName.toLowerCase()} metrics.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
