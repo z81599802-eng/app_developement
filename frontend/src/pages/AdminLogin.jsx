@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const LoginPage = () => {
+const AdminLoginPage = () => {
   const navigate = useNavigate();
+  const adminBaseUrl = useMemo(() => {
+    const normalized = API_BASE_URL.replace(/\/?api\/?$/, '');
+    return normalized === API_BASE_URL ? '' : normalized;
+  }, []);
   const [formData, setFormData] = useState({
-    identifier: '',
+    adminName: '',
+    email: '',
     password: '',
     remember: false
   });
@@ -30,11 +35,12 @@ const LoginPage = () => {
     setStatus({ type: null, message: '' });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${adminBaseUrl}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifier: formData.identifier,
+          adminName: formData.adminName,
+          email: formData.email,
           password: formData.password
         })
       });
@@ -45,19 +51,19 @@ const LoginPage = () => {
         throw new Error(data.message || 'Unable to sign in.');
       }
 
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userProfile', JSON.stringify(data.user));
+      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminProfile', JSON.stringify(data.admin));
 
       if (!formData.remember) {
-        sessionStorage.setItem('authToken', data.token);
-        sessionStorage.setItem('userProfile', JSON.stringify(data.user));
+        sessionStorage.setItem('adminToken', data.token);
+        sessionStorage.setItem('adminProfile', JSON.stringify(data.admin));
       } else {
-        sessionStorage.removeItem('authToken');
-        sessionStorage.removeItem('userProfile');
+        sessionStorage.removeItem('adminToken');
+        sessionStorage.removeItem('adminProfile');
       }
 
-      setStatus({ type: 'success', message: 'Login successful! Token stored.' });
-      navigate('/dashboard', { replace: true });
+      setStatus({ type: 'success', message: 'Login successful.' });
+      navigate('/admin/createuserAccount', { replace: true });
     } catch (error) {
       setStatus({ type: 'error', message: error.message });
     } finally {
@@ -67,19 +73,36 @@ const LoginPage = () => {
 
   return (
     <AuthLayout
-      title="Welcome Back"
-      subtitle="Please sign in to continue"
-      footer={<p>Need an account? Please contact your administrator.</p>}
+      title="Admin Sign In"
+      subtitle="Access the admin console"
+      footer={
+        <p>
+          Need to create an admin? <Link to="/admin/signup">Use your admin token</Link>
+        </p>
+      }
     >
       <form className="auth-form-body" onSubmit={handleSubmit}>
         <div className="form-control">
-          <label htmlFor="identifier">Email or Mobile Number</label>
+          <label htmlFor="adminName">Admin Name</label>
           <input
-            id="identifier"
-            name="identifier"
+            id="adminName"
+            name="adminName"
             type="text"
-            placeholder="Enter your email or mobile"
-            value={formData.identifier}
+            placeholder="Enter admin name"
+            value={formData.adminName}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="form-control">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="Enter admin email"
+            value={formData.email}
             onChange={handleChange}
             required
           />
@@ -92,7 +115,7 @@ const LoginPage = () => {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
+              placeholder="Enter admin password"
               value={formData.password}
               onChange={handleChange}
               required
@@ -118,9 +141,9 @@ const LoginPage = () => {
             />
             Remember Me
           </label>
-          <a className="reset-link" href="/reset-password">
-            Reset Password?
-          </a>
+          <Link className="reset-link" to="/login">
+            Back to user login
+          </Link>
         </div>
 
         {status.message && (
@@ -128,11 +151,11 @@ const LoginPage = () => {
         )}
 
         <button type="submit" className="primary-button" disabled={loading}>
-          {loading ? 'Signing In…' : 'Login'}
+          {loading ? 'Signing In…' : 'Login as Admin'}
         </button>
       </form>
     </AuthLayout>
   );
 };
 
-export default LoginPage;
+export default AdminLoginPage;
