@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiEye, FiEyeOff, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,7 +9,23 @@ const PAGE_OPTIONS = [
   { value: 'revenue', label: 'Revenue' }
 ];
 
-const AdminCreateUserAccountPage = () => {
+const useDebouncedValue = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+const AdminCreateUserAccountPageComponent = () => {
   const navigate = useNavigate();
   const adminProfile = useMemo(() => {
     const storedProfile =
@@ -30,7 +46,8 @@ const AdminCreateUserAccountPage = () => {
     const normalized = API_BASE_URL.replace(/\/?api\/?$/, '');
     return normalized === API_BASE_URL ? '' : normalized;
   }, []);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearchInput = useDebouncedValue(searchInput, 350);
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [searchMessage, setSearchMessage] = useState('');
@@ -41,222 +58,318 @@ const AdminCreateUserAccountPage = () => {
   const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
   const [userStatus, setUserStatus] = useState({ type: null, message: '' });
+  const searchAbortRef = useRef(null);
+  const autoSearchQueryRef = useRef('');
 
-  const resolveAdminToken = () =>
-    localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken') || '';
+  const resolveAdminToken = useCallback(
+    () => localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken') || '',
+    []
+  );
 
-  const handleLogout = () => {
+  const redirectToLogin = useCallback(() => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminProfile');
     sessionStorage.removeItem('adminToken');
     sessionStorage.removeItem('adminProfile');
     navigate('/admin/login', { replace: true });
-  };
+  }, [navigate]);
 
-  const handleSearch = async (event) => {
-    event.preventDefault();
-    setSearching(true);
-    setSearchMessage('');
+  const handleLogout = useCallback(() => {
+    redirectToLogin();
+  }, [redirectToLogin]);
+
+  const resetSearchState = useCallback(() => {
     setSearchResults([]);
     setSelectedUser(null);
+    setLinkForm({ page: 'dashboard', link: '' });
+  }, []);
 
-    const query = searchQuery.trim();
+  const performSearch = useCallback(
+    async (rawQuery, { silent = false, focusEmail } = {}) => {
+      const trimmedQuery = rawQuery.trim();
 
-    if (!query) {
-      setSearchMessage('Please enter an email or mobile number to search.');
-      setSearching(false);
-      return;
-    }
-
-    const token = resolveAdminToken();
-
-    if (!token) {
-      navigate('/admin/login', { replace: true });
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${adminBaseUrl}/admin/usersearch?query=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+      if (!trimmedQuery) {
+        if (!silent) {
+          setSearchMessage('Please enter an email or mobile number to search.');
         }
-      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Unable to search users.');
+        resetSearchState();
+        setSearching(false);
+        return [];
       }
 
-      if (!data.users || data.users.length === 0) {
-        setSearchMessage('No users found. You can create a new user below.');
-        return;
+      const token = resolveAdminToken();
+
+      if (!token) {
+        redirectToLogin();
+        return [];
       }
 
-      setSearchResults(data.users);
-      setSelectedUser(data.users[0]);
-      setLinkForm({ page: 'dashboard', link: '' });
-    } catch (error) {
-      setSearchMessage(error.message);
-    } finally {
-      setSearching(false);
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+
+      if (!silent) {
+        setSearchMessage('');
+        setSearching(true);
+      }
+
+      try {
+        const response = await fetch(
+          `${adminBaseUrl}/admin/usersearch?query=${encodeURIComponent(trimmedQuery)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            signal: controller.signal
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          redirectToLogin();
+          return [];
+        }
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Unable to search users.');
+        }
+
+        const users = Array.isArray(data.users) ? data.users : [];
+
+        if (users.length === 0) {
+          resetSearchState();
+
+          if (!silent) {
+            setSearchMessage('No users found. You can create a new user below.');
+          }
+
+          return [];
+        }
+
+        setSearchResults(users);
+        const normalizedFocus = focusEmail?.toLowerCase();
+        const nextSelected = normalizedFocus
+          ? users.find((user) => user.email.toLowerCase() === normalizedFocus)
+          : users[0];
+        setSelectedUser(nextSelected || users[0]);
+        setLinkForm({ page: 'dashboard', link: '' });
+
+        return users;
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          return [];
+        }
+
+        if (!silent) {
+          setSearchMessage(error.message);
+        }
+
+        return [];
+      } finally {
+        if (!silent) {
+          setSearching(false);
+        }
+
+        if (searchAbortRef.current === controller) {
+          searchAbortRef.current = null;
+        }
+      }
+    },
+    [adminBaseUrl, redirectToLogin, resetSearchState, resolveAdminToken]
+  );
+
+  useEffect(() => {
+    const trimmed = debouncedSearchInput.trim();
+
+    if (!trimmed) {
+      setSearchMessage('');
+      resetSearchState();
+      return;
     }
-  };
 
-  const handleSelectUser = (user) => {
+    if (trimmed.length < 3) {
+      return;
+    }
+
+    if (autoSearchQueryRef.current === trimmed.toLowerCase()) {
+      return;
+    }
+
+    autoSearchQueryRef.current = trimmed.toLowerCase();
+    performSearch(trimmed, { silent: true });
+  }, [debouncedSearchInput, performSearch, resetSearchState]);
+
+  useEffect(
+    () => () => {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+      }
+    },
+    []
+  );
+
+  const handleSearchInputChange = useCallback((event) => {
+    setSearchInput(event.target.value);
+  }, []);
+
+  const handleSearch = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const trimmed = searchInput.trim();
+      setSearchMessage('');
+      setSearching(true);
+      autoSearchQueryRef.current = trimmed.toLowerCase();
+      await performSearch(trimmed, { silent: false });
+      setSearching(false);
+    },
+    [performSearch, searchInput]
+  );
+
+  const handleSelectUser = useCallback((user) => {
     setSelectedUser(user);
     setLinkForm({ page: 'dashboard', link: '' });
     setLinkStatus({ type: null, message: '' });
-  };
+  }, []);
 
-  const handleLinkChange = (event) => {
+  const handleLinkChange = useCallback((event) => {
     const { name, value } = event.target;
     setLinkForm((prev) => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
 
-  const refreshSelectedUser = async (email) => {
-    const token = resolveAdminToken();
+  const refreshSelectedUser = useCallback(
+    async (email) => {
+      if (!email) {
+        return;
+      }
 
-    if (!token) {
-      return;
-    }
+      await performSearch(email, { silent: true, focusEmail: email });
+    },
+    [performSearch]
+  );
 
-    try {
-      const response = await fetch(
-        `${adminBaseUrl}/admin/usersearch?query=${encodeURIComponent(email)}`,
-        {
+  const handleSaveLink = useCallback(
+    async (event) => {
+      event.preventDefault();
+
+      if (!selectedUser) {
+        setLinkStatus({ type: 'error', message: 'Please select a user first.' });
+        return;
+      }
+
+      const token = resolveAdminToken();
+
+      if (!token) {
+        redirectToLogin();
+        return;
+      }
+
+      setLinkStatus({ type: null, message: '' });
+
+      try {
+        const response = await fetch(`${adminBaseUrl}/admin/dashboardlinks`, {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
-          }
+          },
+          body: JSON.stringify({
+            email: selectedUser.email,
+            page: linkForm.page,
+            link: linkForm.link
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Unable to save link.');
         }
-      );
 
-      const data = await response.json();
-
-      if (response.ok && data.users && data.users.length > 0) {
-        const updatedUser = data.users.find((user) => user.email === email) || data.users[0];
-        setSelectedUser(updatedUser);
-        setSearchResults(data.users);
+        setLinkStatus({ type: 'success', message: 'Dashboard link saved successfully.' });
+        setLinkForm((prev) => ({ page: prev.page, link: '' }));
+        refreshSelectedUser(selectedUser.email);
+      } catch (error) {
+        setLinkStatus({ type: 'error', message: error.message });
       }
-    } catch (error) {
-      console.error('Unable to refresh selected user', error);
-    }
-  };
+    },
+    [adminBaseUrl, linkForm.page, linkForm.link, redirectToLogin, refreshSelectedUser, resolveAdminToken, selectedUser]
+  );
 
-  const handleSaveLink = async (event) => {
-    event.preventDefault();
-
-    if (!selectedUser) {
-      setLinkStatus({ type: 'error', message: 'Please select a user first.' });
-      return;
-    }
-
-    const token = resolveAdminToken();
-
-    if (!token) {
-      navigate('/admin/login', { replace: true });
-      return;
-    }
-
-    setLinkStatus({ type: null, message: '' });
-
-    try {
-      const response = await fetch(`${adminBaseUrl}/admin/dashboardlinks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          email: selectedUser.email,
-          page: linkForm.page,
-          link: linkForm.link
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Unable to save link.');
-      }
-
-      setLinkStatus({ type: 'success', message: 'Dashboard link saved successfully.' });
-      setLinkForm({ page: linkForm.page, link: '' });
-      refreshSelectedUser(selectedUser.email);
-    } catch (error) {
-      setLinkStatus({ type: 'error', message: error.message });
-    }
-  };
-
-  const handleNewUserChange = (event) => {
+  const handleNewUserChange = useCallback((event) => {
     const { name, value } = event.target;
     setNewUserForm((prev) => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
 
-  const handleCreateUser = async (event) => {
-    event.preventDefault();
+  const handleCreateUser = useCallback(
+    async (event) => {
+      event.preventDefault();
 
-    const token = resolveAdminToken();
+      const token = resolveAdminToken();
 
-    if (!token) {
-      navigate('/admin/login', { replace: true });
-      return;
-    }
-
-    setUserStatus({ type: null, message: '' });
-    setCreatingUser(true);
-
-    try {
-      const createdEmail = newUserForm.email.trim();
-
-      if (!createdEmail) {
-        setUserStatus({ type: 'error', message: 'Email is required to create a user.' });
-        setCreatingUser(false);
+      if (!token) {
+        redirectToLogin();
         return;
       }
 
-      const mobileNumber = newUserForm.mobileNumber.trim();
-      const response = await fetch(`${adminBaseUrl}/admin/createuser`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          email: createdEmail,
-          mobileNumber: mobileNumber || null,
-          password: newUserForm.password
-        })
-      });
+      setUserStatus({ type: null, message: '' });
+      setCreatingUser(true);
 
-      const data = await response.json();
+      try {
+        const createdEmail = newUserForm.email.trim();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Unable to create user.');
+        if (!createdEmail) {
+          setUserStatus({ type: 'error', message: 'Email is required to create a user.' });
+          setCreatingUser(false);
+          return;
+        }
+
+        const mobileNumber = newUserForm.mobileNumber.trim();
+        const response = await fetch(`${adminBaseUrl}/admin/createuser`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            email: createdEmail,
+            mobileNumber: mobileNumber || null,
+            password: newUserForm.password
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Unable to create user.');
+        }
+
+        const responseEmail = (data.email || createdEmail).toLowerCase();
+        setUserStatus({ type: 'success', message: 'User account created successfully.' });
+        setNewUserForm({ email: '', mobileNumber: '', password: '' });
+        setSearchInput(responseEmail);
+        autoSearchQueryRef.current = responseEmail;
+        await performSearch(responseEmail, { silent: true, focusEmail: responseEmail });
+      } catch (error) {
+        setUserStatus({ type: 'error', message: error.message });
+      } finally {
+        setCreatingUser(false);
       }
+    },
+    [adminBaseUrl, newUserForm.email, newUserForm.mobileNumber, newUserForm.password, performSearch, redirectToLogin, resolveAdminToken]
+  );
 
-      setUserStatus({ type: 'success', message: 'User account created successfully.' });
-      const responseEmail = data.email || createdEmail;
-      setNewUserForm({ email: '', mobileNumber: '', password: '' });
-      setSearchQuery(responseEmail);
-      refreshSelectedUser(responseEmail);
-    } catch (error) {
-      setUserStatus({ type: 'error', message: error.message });
-    } finally {
-      setCreatingUser(false);
-    }
-  };
-
-  const existingLinks = selectedUser?.links || [];
+  const existingLinks = useMemo(() => selectedUser?.links || [], [selectedUser]);
 
   return (
     <div className="admin-console-page">
@@ -270,13 +383,21 @@ const AdminCreateUserAccountPage = () => {
             {adminProfile ? (
               <>
                 <span>{adminProfile.adminName || adminProfile.email}</span>
-                <button type="button" className="secondary-button" onClick={handleLogout}>
+                <button
+                  type="button"
+                  className="primary-button admin-console-logout-btn"
+                  onClick={handleLogout}
+                >
                   <FiLogOut aria-hidden="true" />
                   <span>Logout</span>
                 </button>
               </>
             ) : (
-              <button type="button" className="secondary-button" onClick={handleLogout}>
+              <button
+                type="button"
+                className="primary-button admin-console-logout-btn"
+                onClick={handleLogout}
+              >
                 <FiLogOut aria-hidden="true" />
                 <span>Logout</span>
               </button>
@@ -293,8 +414,8 @@ const AdminCreateUserAccountPage = () => {
                 id="search"
                 type="text"
                 placeholder="Search by email or mobile"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                value={searchInput}
+                onChange={handleSearchInputChange}
                 required
               />
             </div>
@@ -315,9 +436,7 @@ const AdminCreateUserAccountPage = () => {
                 <button
                   type="button"
                   key={user.id}
-                  className={`admin-user-chip ${
-                    selectedUser?.email === user.email ? 'active' : ''
-                  }`}
+                  className={`admin-user-chip ${selectedUser?.email === user.email ? 'active' : ''}`}
                   onClick={() => handleSelectUser(user)}
                 >
                   <span>{user.email}</span>
@@ -443,16 +562,9 @@ const AdminCreateUserAccountPage = () => {
             )}
           </form>
         </section>
-
-        <footer className="admin-console-footer">
-          <button type="button" className="admin-console-logout" onClick={handleLogout}>
-            <FiLogOut aria-hidden="true" />
-            <span>Logout</span>
-          </button>
-        </footer>
       </div>
     </div>
   );
 };
 
-export default AdminCreateUserAccountPage;
+export default memo(AdminCreateUserAccountPageComponent);
