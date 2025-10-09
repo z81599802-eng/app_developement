@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
+import { dashboardLinkCache, userSearchCache } from '../utils/cache.js';
 
 const ADMIN_LINK_PAGES = ['dashboard', 'performance', 'revenue'];
 
@@ -16,6 +17,14 @@ const sanitizeUrl = (url) => {
 
   return trimmed;
 };
+
+const cloneUsers = (users) =>
+  users.map((user) => ({
+    ...user,
+    links: Array.isArray(user.links)
+      ? user.links.map((link) => ({ ...link }))
+      : []
+  }));
 
 const createAdminToken = ({ id, email, adminName }) =>
   jwt.sign(
@@ -157,6 +166,8 @@ export const createUserAccount = async (req, res) => {
       [normalizedEmail, normalizedMobile, passwordHash]
     );
 
+    userSearchCache.clear();
+
     return res.status(201).json({ message: 'User account created successfully.', email: normalizedEmail });
   } catch (error) {
     console.error('Create user error:', error);
@@ -166,37 +177,64 @@ export const createUserAccount = async (req, res) => {
 
 export const searchUsers = async (req, res) => {
   const { query } = req.query;
+  const trimmedQuery = query?.trim();
 
-  if (!query) {
+  if (!trimmedQuery) {
     return res.status(400).json({ message: 'Search query is required.' });
   }
 
+  const normalizedQuery = trimmedQuery.toLowerCase();
+  const cached = userSearchCache.get(normalizedQuery);
+
+  if (cached) {
+    return res.status(200).json({ users: cloneUsers(cached) });
+  }
+
   try {
-    const wildcard = `%${query.trim()}%`;
+    const wildcardEmail = `%${normalizedQuery}%`;
+    const wildcardMobile = `%${trimmedQuery}%`;
     const [users] = await pool.execute(
       `SELECT id, email, mobile_number AS mobileNumber, created_at AS createdAt
        FROM users
-       WHERE email LIKE ? OR mobile_number LIKE ?
+       WHERE LOWER(email) LIKE ? OR mobile_number LIKE ?
        ORDER BY created_at DESC
-       LIMIT 20`,
-      [wildcard, wildcard]
+       LIMIT 25`,
+      [wildcardEmail, wildcardMobile]
     );
 
-    const results = await Promise.all(
-      users.map(async (user) => {
-        const [links] = await pool.execute(
-          'SELECT page, link FROM dashboardlinks WHERE email = ? ORDER BY created_at DESC',
-          [user.email]
-        );
+    if (users.length === 0) {
+      userSearchCache.set(normalizedQuery, []);
+      return res.status(200).json({ users: [] });
+    }
 
-        return {
-          ...user,
-          links
-        };
-      })
-    );
+    const emails = users.map((user) => user.email);
+    let linksByEmail = new Map();
 
-    return res.status(200).json({ users: results });
+    if (emails.length > 0) {
+      const [links] = await pool.query(
+        `SELECT email, page, link, created_at AS createdAt
+         FROM dashboardlinks
+         WHERE email IN (?)
+         ORDER BY created_at DESC`,
+        [emails]
+      );
+
+      linksByEmail = links.reduce((accumulator, row) => {
+        const list = accumulator.get(row.email) || [];
+        list.push({ page: row.page, link: row.link, createdAt: row.createdAt });
+        accumulator.set(row.email, list);
+        return accumulator;
+      }, new Map());
+    }
+
+    const results = users.map((user) => ({
+      ...user,
+      links: linksByEmail.get(user.email) || []
+    }));
+
+    userSearchCache.set(normalizedQuery, results);
+
+    return res.status(200).json({ users: cloneUsers(results) });
   } catch (error) {
     console.error('User search error:', error);
     return res.status(500).json({ message: 'Unable to search users at this time.' });
@@ -235,6 +273,8 @@ export const addDashboardLink = async (req, res) => {
       [normalizedEmail, normalizedPage]
     );
 
+    const cacheKey = `${normalizedEmail}:${normalizedPage}`;
+
     if (existing.length > 0) {
       await pool.execute('UPDATE dashboardlinks SET link = ?, created_at = NOW() WHERE id = ?', [
         sanitizedLink,
@@ -246,6 +286,9 @@ export const addDashboardLink = async (req, res) => {
         [normalizedEmail, normalizedPage, sanitizedLink]
       );
     }
+
+    dashboardLinkCache.delete(cacheKey);
+    userSearchCache.clear();
 
     return res.status(200).json({ message: 'Dashboard link saved successfully.' });
   } catch (error) {

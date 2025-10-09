@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiLogOut, FiMenu, FiSidebar, FiX } from 'react-icons/fi';
 import { LuIndianRupee, LuLayoutDashboard, LuTrendingUp } from 'react-icons/lu';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
@@ -22,6 +22,106 @@ const getStoredSidebarPreference = () => {
   return localStorage.getItem('dashboardSidebarCollapsed') === 'true';
 };
 
+const Sidebar = memo(
+  ({
+    collapsed,
+    isMobile,
+    isMobileMenuOpen,
+    navItems,
+    onToggle,
+    onLogout,
+    onCloseMobileMenu
+  }) => {
+    const sidebarClassName = useMemo(() => {
+      const classes = ['dashboard-sidebar'];
+
+      if (collapsed) {
+        classes.push('collapsed');
+      }
+
+      if (isMobile) {
+        classes.push('mobile');
+      }
+
+      if (isMobile && isMobileMenuOpen) {
+        classes.push('open');
+      }
+
+      return classes.join(' ');
+    }, [collapsed, isMobile, isMobileMenuOpen]);
+
+    const tooltipEnabled = collapsed && !isMobile;
+
+    return (
+      <aside className={sidebarClassName}>
+        <div className="sidebar-top">
+          {(!collapsed || isMobile) && (
+            <div className="sidebar-brand" aria-label="Application logo">
+              <img src={logo} alt="App logo" className="sidebar-logo" loading="lazy" />
+            </div>
+          )}
+
+          {!isMobile && (
+            <button
+              type="button"
+              className="sidebar-toggle"
+              onClick={onToggle}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-pressed={collapsed}
+            >
+              <FiSidebar aria-hidden="true" />
+            </button>
+          )}
+        </div>
+
+        <nav className="sidebar-nav" aria-label="Dashboard navigation">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/dashboard'}
+                className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+                aria-label={collapsed ? item.title : undefined}
+                onClick={onCloseMobileMenu}
+              >
+                <span className="sidebar-icon" aria-hidden="true">
+                  <Icon />
+                </span>
+                {!collapsed && <span className="sidebar-label">{item.label}</span>}
+                {tooltipEnabled && (
+                  <span className="sidebar-tooltip tooltip" role="tooltip">
+                    {item.label}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <button
+          type="button"
+          className="sidebar-logout"
+          onClick={onLogout}
+          aria-label={collapsed ? 'Logout' : undefined}
+        >
+          <FiLogOut aria-hidden="true" />
+          {!collapsed && <span>Logout</span>}
+          {tooltipEnabled && (
+            <span className="sidebar-tooltip tooltip" role="tooltip">
+              Logout
+            </span>
+          )}
+        </button>
+      </aside>
+    );
+  }
+);
+
+Sidebar.displayName = 'DashboardSidebar';
+
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -34,6 +134,8 @@ const DashboardLayout = () => {
     return window.innerWidth <= MOBILE_BREAKPOINT;
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const collapseAnimationRef = useRef(null);
+  const mobileMenuAnimationRef = useRef(null);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -125,65 +227,119 @@ const DashboardLayout = () => {
     []
   );
 
-  const persistCollapsedState = (collapsed) => {
+  const persistCollapsedState = useCallback((collapsed) => {
     setIsCollapsed(collapsed);
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('dashboardSidebarCollapsed', collapsed ? 'true' : 'false');
     }
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const scheduleCollapse = useCallback(
+    (nextCollapsedState) => {
+      if (typeof window === 'undefined') {
+        persistCollapsedState(nextCollapsedState);
+        return;
+      }
+
+      if (collapseAnimationRef.current) {
+        cancelAnimationFrame(collapseAnimationRef.current);
+      }
+
+      collapseAnimationRef.current = window.requestAnimationFrame(() => {
+        persistCollapsedState(nextCollapsedState);
+        collapseAnimationRef.current = null;
+      });
+    },
+    [persistCollapsedState]
+  );
+
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userProfile');
     sessionStorage.removeItem('authToken');
     sessionStorage.removeItem('userProfile');
+
     if (isMobileViewport) {
       setIsMobileMenuOpen(false);
     }
-    navigate('/login', { replace: true });
-  };
 
-  const handleToggle = () => {
+    navigate('/login', { replace: true });
+  }, [isMobileViewport, navigate]);
+
+  const handleToggle = useCallback(() => {
     if (isMobileViewport) {
       return;
     }
 
-    persistCollapsedState(!isCollapsed);
-  };
+    scheduleCollapse(!isCollapsed);
+  }, [isCollapsed, isMobileViewport, scheduleCollapse]);
 
-  const handleMobileMenuToggle = () => {
+  const updateMobileMenu = useCallback((open) => {
     if (!isMobileViewport) {
       return;
     }
 
-    setIsMobileMenuOpen((prev) => !prev);
-  };
-
-  const handleCloseMobileMenu = () => {
-    if (!isMobileViewport) {
-      return;
+    if (mobileMenuAnimationRef.current) {
+      cancelAnimationFrame(mobileMenuAnimationRef.current);
     }
 
-    setIsMobileMenuOpen(false);
-  };
+    mobileMenuAnimationRef.current = window.requestAnimationFrame(() => {
+      setIsMobileMenuOpen(open);
+      mobileMenuAnimationRef.current = null;
+    });
+  }, [isMobileViewport]);
+
+  const handleMobileMenuToggle = useCallback(() => {
+    updateMobileMenu(!isMobileMenuOpen);
+  }, [isMobileMenuOpen, updateMobileMenu]);
+
+  const handleCloseMobileMenu = useCallback(() => {
+    updateMobileMenu(false);
+  }, [updateMobileMenu]);
+
+  useEffect(
+    () => () => {
+      if (collapseAnimationRef.current) {
+        cancelAnimationFrame(collapseAnimationRef.current);
+      }
+
+      if (mobileMenuAnimationRef.current) {
+        cancelAnimationFrame(mobileMenuAnimationRef.current);
+      }
+    },
+    []
+  );
 
   if (checkingAuth) {
     return <div className="dashboard-loading">Preparing your dashboard…</div>;
   }
 
   const collapsedForDesktop = !isMobileViewport && isCollapsed;
+  const shellClassName = useMemo(() => {
+    const classes = ['dashboard-shell'];
+
+    if (collapsedForDesktop) {
+      classes.push('collapsed');
+    }
+
+    if (isMobileViewport) {
+      classes.push('mobile');
+    }
+
+    if (isMobileViewport && isMobileMenuOpen) {
+      classes.push('mobile-open');
+    }
+
+    return classes.join(' ');
+  }, [collapsedForDesktop, isMobileMenuOpen, isMobileViewport]);
 
   return (
-    <div
-      className={`dashboard-shell ${collapsedForDesktop ? 'collapsed' : ''} ${
-        isMobileViewport ? 'mobile' : ''
-      } ${isMobileViewport && isMobileMenuOpen ? 'mobile-open' : ''}`}
-    >
+    <div className={shellClassName}>
       {isMobileViewport && (
         <header className="dashboard-mobile-header">
           <div className="mobile-header-logo" aria-label="Application logo">
-            <img src={logo} alt="App logo" />
+            <img src={logo} alt="App logo" loading="lazy" />
           </div>
 
           <button
@@ -198,67 +354,15 @@ const DashboardLayout = () => {
         </header>
       )}
 
-      <aside
-        className={`dashboard-sidebar ${collapsedForDesktop ? 'collapsed' : ''} ${
-          isMobileViewport ? 'mobile' : ''
-        } ${isMobileViewport && isMobileMenuOpen ? 'open' : ''}`}
-      >
-        <div className="sidebar-top">
-          {(!collapsedForDesktop || isMobileViewport) && (
-            <div className="sidebar-brand" aria-label="Application logo">
-              <img src={logo} alt="App logo" className="sidebar-logo" />
-            </div>
-          )}
-
-          {!isMobileViewport && (
-            <button
-              type="button"
-              className="sidebar-toggle"
-              onClick={handleToggle}
-              aria-label={collapsedForDesktop ? 'Expand sidebar' : 'Collapse sidebar'}
-              aria-pressed={collapsedForDesktop}
-            >
-              <FiSidebar aria-hidden="true" />
-            </button>
-          )}
-        </div>
-
-        <nav className="sidebar-nav" aria-label="Dashboard navigation">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/dashboard'}
-                className={({ isActive }) =>
-                  `sidebar-nav-link ${isActive ? 'active' : ''}`
-                }
-                aria-label={collapsedForDesktop ? item.title : undefined}
-                data-tooltip={collapsedForDesktop ? item.title : undefined}
-                onClick={handleCloseMobileMenu}
-              >
-                <span className="sidebar-icon" aria-hidden="true">
-                  <Icon />
-                </span>
-                {!collapsedForDesktop && <span className="sidebar-label">{item.label}</span>}
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        <button
-          type="button"
-          className="sidebar-logout"
-          onClick={handleLogout}
-          aria-label={collapsedForDesktop ? 'Logout' : undefined}
-          data-tooltip={collapsedForDesktop ? 'Logout' : undefined}
-        >
-          <FiLogOut aria-hidden="true" />
-          {!collapsedForDesktop && <span>Logout</span>}
-        </button>
-      </aside>
+      <Sidebar
+        collapsed={collapsedForDesktop}
+        isMobile={isMobileViewport}
+        isMobileMenuOpen={isMobileMenuOpen}
+        navItems={navItems}
+        onToggle={handleToggle}
+        onLogout={handleLogout}
+        onCloseMobileMenu={handleCloseMobileMenu}
+      />
 
       {isMobileViewport && (
         <div

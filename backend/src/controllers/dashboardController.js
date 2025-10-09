@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import { dashboardLinkCache } from '../utils/cache.js';
 
 const sectionMessages = {
   dashboard: 'Welcome to Dashboard',
@@ -63,6 +64,13 @@ export const getDashboardLink = async (req, res) => {
   }
 
   try {
+    const cacheKey = `${authenticatedEmail}:${normalizedPage}`;
+    const cachedLink = dashboardLinkCache.get(cacheKey);
+
+    if (cachedLink) {
+      return res.status(200).json(cachedLink);
+    }
+
     const [rows] = await pool.execute(
       'SELECT link FROM dashboardlinks WHERE email = ? AND page = ? LIMIT 1',
       [authenticatedEmail, normalizedPage]
@@ -72,11 +80,15 @@ export const getDashboardLink = async (req, res) => {
       return res.status(404).json({ message: 'No dashboard link configured for this section yet.' });
     }
 
-    return res.status(200).json({
+    const payload = {
       email: authenticatedEmail,
       page: normalizedPage,
       link: rows[0].link
-    });
+    };
+
+    dashboardLinkCache.set(cacheKey, payload);
+
+    return res.status(200).json(payload);
   } catch (error) {
     console.error('Get dashboard link error:', error);
     return res.status(500).json({ message: 'Unable to retrieve dashboard link at this time.' });
