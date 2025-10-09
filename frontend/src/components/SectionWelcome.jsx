@@ -145,12 +145,16 @@ const SectionWelcome = ({ section }) => {
     return () => clearTimeout(timer);
   }, [animate]);
 
+  const sectionClasses = [
+    'section-welcome',
+    animate ? 'section-welcome-animate' : '',
+    iframeUrl ? 'has-iframe' : 'no-iframe'
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div
-      className={`section-welcome ${animate ? 'section-welcome-animate' : ''}`}
-      role="status"
-      aria-live="polite"
-    >
+    <div className={sectionClasses} role="status" aria-live="polite">
       {iframeUrl ? (
         <iframe
           title={`${displayName} insights`}

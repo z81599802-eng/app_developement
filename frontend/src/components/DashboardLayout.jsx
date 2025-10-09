@@ -36,6 +36,23 @@ const DashboardLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+
+    htmlElement.classList.add('dashboard-active');
+    bodyElement.classList.add('dashboard-active');
+
+    return () => {
+      htmlElement.classList.remove('dashboard-active');
+      bodyElement.classList.remove('dashboard-active');
+    };
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     const verifyAccess = async () => {

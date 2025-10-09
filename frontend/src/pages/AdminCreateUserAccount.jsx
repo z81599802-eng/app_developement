@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { FiEye, FiEyeOff, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -37,6 +38,7 @@ const AdminCreateUserAccountPage = () => {
   const [linkForm, setLinkForm] = useState({ page: 'dashboard', link: '' });
   const [linkStatus, setLinkStatus] = useState({ type: null, message: '' });
   const [newUserForm, setNewUserForm] = useState({ email: '', mobileNumber: '', password: '' });
+  const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
   const [userStatus, setUserStatus] = useState({ type: null, message: '' });
 
@@ -257,177 +259,198 @@ const AdminCreateUserAccountPage = () => {
   const existingLinks = selectedUser?.links || [];
 
   return (
-    <div className="admin-console">
-      <header className="admin-console-header">
-        <div>
-          <h1>Admin Console</h1>
-          <p>Manage user accounts and dashboard links.</p>
-        </div>
-        <div className="admin-console-profile">
-          {adminProfile ? (
-            <>
-              <span>{adminProfile.adminName || adminProfile.email}</span>
-              <button type="button" className="secondary-button" onClick={handleLogout}>
-                Log out
-              </button>
-            </>
-          ) : (
-            <button type="button" className="secondary-button" onClick={handleLogout}>
-              Log out
-            </button>
-          )}
-        </div>
-      </header>
-
-      <section className="admin-console-section">
-        <h2>Find a User</h2>
-        <form className="admin-console-form" onSubmit={handleSearch}>
-          <div className="form-control">
-            <label htmlFor="search">Email or Mobile</label>
-            <input
-              id="search"
-              type="text"
-              placeholder="Search by email or mobile"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              required
-            />
+    <div className="admin-console-page">
+      <div className="admin-console">
+        <header className="admin-console-header">
+          <div>
+            <h1>Admin Console</h1>
+            <p>Manage user accounts and dashboard links.</p>
           </div>
-          <button type="submit" className="primary-button" disabled={searching}>
-            {searching ? 'Searching…' : 'Search Users'}
-          </button>
-        </form>
-        {searchMessage && (
-          <p
-            className={`status-message ${/unable|error/i.test(searchMessage) ? 'error' : 'info'}`}
-          >
-            {searchMessage}
-          </p>
-        )}
-        {searchResults.length > 0 && (
-          <div className="admin-console-results">
-            {searchResults.map((user) => (
-              <button
-                type="button"
-                key={user.id}
-                className={`admin-user-chip ${
-                  selectedUser?.email === user.email ? 'active' : ''
-                }`}
-                onClick={() => handleSelectUser(user)}
-              >
-                <span>{user.email}</span>
-                {user.mobileNumber && <small>{user.mobileNumber}</small>}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {selectedUser && (
-        <section className="admin-console-section">
-          <h2>Dashboard Links for {selectedUser.email}</h2>
-          <div className="admin-links-list">
-            {existingLinks.length > 0 ? (
-              existingLinks.map((item) => (
-                <div key={`${item.page}-${item.link}`} className="admin-link-card">
-                  <span className="admin-link-page">{item.page}</span>
-                  <a href={item.link} target="_blank" rel="noreferrer" className="admin-link-url">
-                    {item.link}
-                  </a>
-                </div>
-              ))
+          <div className="admin-console-profile">
+            {adminProfile ? (
+              <>
+                <span>{adminProfile.adminName || adminProfile.email}</span>
+                <button type="button" className="secondary-button" onClick={handleLogout}>
+                  <FiLogOut aria-hidden="true" />
+                  <span>Logout</span>
+                </button>
+              </>
             ) : (
-              <p className="status-message info">No links assigned yet.</p>
+              <button type="button" className="secondary-button" onClick={handleLogout}>
+                <FiLogOut aria-hidden="true" />
+                <span>Logout</span>
+              </button>
             )}
           </div>
+        </header>
 
-          <form className="admin-console-form" onSubmit={handleSaveLink}>
+        <section className="admin-console-section">
+          <h2>Find a User</h2>
+          <form className="admin-console-form" onSubmit={handleSearch}>
             <div className="form-control">
-              <label htmlFor="page">Page</label>
-              <select id="page" name="page" value={linkForm.page} onChange={handleLinkChange}>
-                {PAGE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="search">Email or Mobile</label>
+              <input
+                id="search"
+                type="text"
+                placeholder="Search by email or mobile"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                required
+              />
+            </div>
+            <button type="submit" className="primary-button" disabled={searching}>
+              {searching ? 'Searching…' : 'Search Users'}
+            </button>
+            {searchMessage && (
+              <p
+                className={`status-message ${/unable|error/i.test(searchMessage) ? 'error' : 'info'}`}
+              >
+                {searchMessage}
+              </p>
+            )}
+          </form>
+          {searchResults.length > 0 && (
+            <div className="admin-console-results">
+              {searchResults.map((user) => (
+                <button
+                  type="button"
+                  key={user.id}
+                  className={`admin-user-chip ${
+                    selectedUser?.email === user.email ? 'active' : ''
+                  }`}
+                  onClick={() => handleSelectUser(user)}
+                >
+                  <span>{user.email}</span>
+                  {user.mobileNumber && <small>{user.mobileNumber}</small>}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {selectedUser && (
+          <section className="admin-console-section">
+            <h2>Dashboard Links for {selectedUser.email}</h2>
+            <div className="admin-links-list">
+              {existingLinks.length > 0 ? (
+                existingLinks.map((item) => (
+                  <div key={`${item.page}-${item.link}`} className="admin-link-card">
+                    <span className="admin-link-page">{item.page}</span>
+                    <a href={item.link} target="_blank" rel="noreferrer" className="admin-link-url">
+                      {item.link}
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <p className="status-message info">No links assigned yet.</p>
+              )}
             </div>
 
+            <form className="admin-console-form" onSubmit={handleSaveLink}>
+              <div className="form-control">
+                <label htmlFor="page">Page</label>
+                <select id="page" name="page" value={linkForm.page} onChange={handleLinkChange}>
+                  {PAGE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-control">
+                <label htmlFor="link">Link URL</label>
+                <input
+                  id="link"
+                  name="link"
+                  type="url"
+                  placeholder="https://example.com/dashboard"
+                  value={linkForm.link}
+                  onChange={handleLinkChange}
+                  required
+                />
+              </div>
+
+              <button type="submit" className="primary-button">
+                Save Link
+              </button>
+
+              {linkStatus.message && (
+                <p className={`status-message ${linkStatus.type}`}>{linkStatus.message}</p>
+              )}
+            </form>
+          </section>
+        )}
+
+        <section className="admin-console-section">
+          <h2>Create a New User</h2>
+          <form className="admin-console-form" onSubmit={handleCreateUser}>
             <div className="form-control">
-              <label htmlFor="link">Link URL</label>
+              <label htmlFor="newEmail">Email</label>
               <input
-                id="link"
-                name="link"
-                type="url"
-                placeholder="https://example.com/dashboard"
-                value={linkForm.link}
-                onChange={handleLinkChange}
+                id="newEmail"
+                name="email"
+                type="email"
+                placeholder="Enter user email"
+                value={newUserForm.email}
+                onChange={handleNewUserChange}
                 required
               />
             </div>
 
-            {linkStatus.message && (
-              <p className={`status-message ${linkStatus.type}`}>{linkStatus.message}</p>
-            )}
+            <div className="form-control">
+              <label htmlFor="newMobile">Mobile Number</label>
+              <input
+                id="newMobile"
+                name="mobileNumber"
+                type="text"
+                placeholder="Optional mobile number"
+                value={newUserForm.mobileNumber}
+                onChange={handleNewUserChange}
+              />
+            </div>
 
-            <button type="submit" className="primary-button">
-              Save Link
+            <div className="form-control">
+              <label htmlFor="newPassword">Password</label>
+              <div className="password-field">
+                <input
+                  id="newPassword"
+                  name="password"
+                  type={showNewUserPassword ? 'text' : 'password'}
+                  placeholder="Create a password"
+                  value={newUserForm.password}
+                  onChange={handleNewUserChange}
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowNewUserPassword((prev) => !prev)}
+                  aria-label={showNewUserPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewUserPassword ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="primary-button" disabled={creatingUser}>
+              {creatingUser ? 'Creating…' : 'Create User'}
             </button>
+
+            {userStatus.message && (
+              <p className={`status-message ${userStatus.type}`}>{userStatus.message}</p>
+            )}
           </form>
         </section>
-      )}
 
-      <section className="admin-console-section">
-        <h2>Create a New User</h2>
-        <form className="admin-console-form" onSubmit={handleCreateUser}>
-          <div className="form-control">
-            <label htmlFor="newEmail">Email</label>
-            <input
-              id="newEmail"
-              name="email"
-              type="email"
-              placeholder="Enter user email"
-              value={newUserForm.email}
-              onChange={handleNewUserChange}
-              required
-            />
-          </div>
-
-          <div className="form-control">
-            <label htmlFor="newMobile">Mobile Number</label>
-            <input
-              id="newMobile"
-              name="mobileNumber"
-              type="text"
-              placeholder="Optional mobile number"
-              value={newUserForm.mobileNumber}
-              onChange={handleNewUserChange}
-            />
-          </div>
-
-          <div className="form-control">
-            <label htmlFor="newPassword">Password</label>
-            <input
-              id="newPassword"
-              name="password"
-              type="password"
-              placeholder="Create a password"
-              value={newUserForm.password}
-              onChange={handleNewUserChange}
-              required
-              minLength={6}
-            />
-          </div>
-
-          {userStatus.message && (
-            <p className={`status-message ${userStatus.type}`}>{userStatus.message}</p>
-          )}
-
-          <button type="submit" className="primary-button" disabled={creatingUser}>
-            {creatingUser ? 'Creating…' : 'Create User'}
+        <footer className="admin-console-footer">
+          <button type="button" className="admin-console-logout" onClick={handleLogout}>
+            <FiLogOut aria-hidden="true" />
+            <span>Logout</span>
           </button>
-        </form>
-      </section>
+        </footer>
+      </div>
     </div>
   );
 };
