@@ -314,7 +314,9 @@ a:hover {
   padding: 2rem;
   background: #ffffff;
   border-radius: 24px;
-  box-shadow: 0 30px 60px rgba(115, 103, 240, 0.15);
+  border: 1px solid rgba(115, 103, 240, 0.2);
+  box-shadow: 0 30px 60px rgba(17, 17, 26, 0.35);
+  backdrop-filter: blur(22px);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -331,13 +333,13 @@ a:hover {
 
 .admin-console-header h1 {
   margin: 0;
-  font-size: 2rem;
-  color: #2f3349;
+  font-size: clamp(1.75rem, 2.8vw, 2.25rem);
+  color: #ffffff;
 }
 
 .admin-console-header p {
   margin: 0.35rem 0 0;
-  color: #7a7f9a;
+  color: rgba(244, 245, 255, 0.7);
 }
 
 .admin-console-profile {
@@ -359,7 +361,7 @@ a:hover {
 }
 
 .admin-console-section {
-  background: rgba(115, 103, 240, 0.03);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
   padding: 1.75rem;
   display: flex;
@@ -391,11 +393,11 @@ a:hover {
 }
 
 .admin-user-chip {
-  border: 1px solid rgba(115, 103, 240, 0.2);
+  border: 1px solid rgba(115, 103, 240, 0.4);
   border-radius: 14px;
   padding: 0.75rem 1rem;
-  background: #ffffff;
-  color: #2f3349;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -406,12 +408,13 @@ a:hover {
 
 .admin-user-chip:hover,
 .admin-user-chip.active {
-  border-color: #7367f0;
-  box-shadow: 0 12px 24px rgba(115, 103, 240, 0.18);
+  border-color: rgba(115, 103, 240, 0.75);
+  box-shadow: 0 12px 24px rgba(115, 103, 240, 0.28);
+  transform: translateY(-2px);
 }
 
 .admin-user-chip small {
-  color: #7a7f9a;
+  color: rgba(244, 245, 255, 0.7);
 }
 
 .admin-links-list {
@@ -421,10 +424,10 @@ a:hover {
 }
 
 .admin-link-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 1rem 1.25rem;
-  border: 1px solid rgba(115, 103, 240, 0.15);
+  border: 1px solid rgba(115, 103, 240, 0.3);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -433,7 +436,7 @@ a:hover {
 .admin-link-page {
   text-transform: capitalize;
   font-weight: 600;
-  color: #7367f0;
+  color: #d0ccff;
 }
 
 .admin-link-url {
