@@ -852,7 +852,8 @@ a:hover {
   position: fixed;
   inset: 0 auto 0 0;
   transform: translateX(-100%);
-  width: 100vw;
+  width: min(360px, 100vw);
+  max-width: 100%;
   min-height: 100vh;
   height: 100%;
   padding: clamp(2.5rem, 8vw, 3.25rem) clamp(1.75rem, 6vw, 2.5rem);
