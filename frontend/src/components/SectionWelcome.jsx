@@ -4,7 +4,10 @@ import PropTypes from 'prop-types';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const SectionWelcome = ({ section }) => {
-  const displayName = section.charAt(0).toUpperCase() + section.slice(1);
+  const displayName = useMemo(
+    () => section.charAt(0).toUpperCase() + section.slice(1),
+    [section]
+  );
   const [message, setMessage] = useState(`Welcome to ${displayName}`);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,6 +35,7 @@ const SectionWelcome = ({ section }) => {
 
   useEffect(() => {
     let isMounted = true;
+    const controller = new AbortController();
 
     const fetchMessage = async () => {
       setLoading(true);
@@ -94,7 +98,8 @@ const SectionWelcome = ({ section }) => {
           {
             headers: {
               Authorization: `Bearer ${token}`
-            }
+            },
+            signal: controller.signal
           }
         );
 
@@ -130,6 +135,7 @@ const SectionWelcome = ({ section }) => {
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
   }, [section, displayName, getStoredProfile]);
 
