@@ -300,19 +300,19 @@ a:hover {
 
 .admin-console-page {
   min-height: 100vh;
-  background-color: #25293c;
-  padding: clamp(1.5rem, 5vw, 3rem);
+  padding: 2.5rem 1.5rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  overflow: hidden;
+  align-items: stretch;
+  box-sizing: border-box;
 }
 
 .admin-console {
-  width: min(1120px, 100%);
-  margin: 0;
-  padding: clamp(2rem, 5vw, 2.75rem);
-  background: rgba(23, 25, 41, 0.72);
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
   border-radius: 24px;
   border: 1px solid rgba(115, 103, 240, 0.2);
   box-shadow: 0 30px 60px rgba(17, 17, 26, 0.35);
@@ -320,16 +320,15 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  box-sizing: border-box;
-  color: #f6f7ff;
+  color: #2f3349;
 }
 
 .admin-console-header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .admin-console-header h1 {
@@ -345,12 +344,10 @@ a:hover {
 
 .admin-console-profile {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 1rem;
+  color: #7367f0;
   font-weight: 600;
-  min-width: 0;
 }
 
 .admin-console-profile span {
@@ -358,63 +355,41 @@ a:hover {
 }
 
 .admin-console-logout-btn {
-  background: rgba(115, 103, 240, 0.18);
-  color: #ffffff;
-  padding-inline: 1.5rem;
-}
-
-.admin-console-logout-btn:hover {
-  background: rgba(115, 103, 240, 0.32);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .admin-console-section {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 20px;
-  padding: clamp(1.5rem, 4vw, 2rem);
+  padding: 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  width: 100%;
-  box-sizing: border-box;
-  backdrop-filter: blur(12px);
 }
 
 .admin-console-section h2 {
   margin: 0;
-  color: #ffffff;
-  font-size: clamp(1.3rem, 2.2vw, 1.6rem);
-  overflow-wrap: anywhere;
+  color: #2f3349;
+  font-size: 1.5rem;
 }
 
 .admin-console-form {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
-  align-items: flex-end;
-  width: 100%;
-}
-
-.admin-console-form .form-control {
-  flex: 1 1 min(280px, 100%);
-  min-width: 0;
+  align-items: end;
 }
 
 .admin-console-form .primary-button {
-  flex: 0 0 auto;
-  align-self: flex-end;
-}
-
-.admin-console-form .status-message {
-  flex: 1 1 100%;
-  margin: 0;
-  text-align: left;
+  justify-self: start;
 }
 
 .admin-console-results {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  width: 100%;
 }
 
 .admin-user-chip {
@@ -426,11 +401,9 @@ a:hover {
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  flex: 1 1 260px;
-  min-width: 0;
-  gap: 0.35rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  word-break: break-word;
+  min-width: 200px;
+  gap: 0.25rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-user-chip:hover,
@@ -445,10 +418,9 @@ a:hover {
 }
 
 .admin-links-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
-  width: 100%;
 }
 
 .admin-link-card {
@@ -459,8 +431,6 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1 1 min(280px, 100%);
-  min-width: 0;
 }
 
 .admin-link-page {
@@ -470,8 +440,8 @@ a:hover {
 }
 
 .admin-link-url {
-  color: #ffffff;
-  overflow-wrap: anywhere;
+  color: #2f3349;
+  word-break: break-word;
 }
 
 .auth-footer {
@@ -511,18 +481,11 @@ a:hover {
   }
 
   .admin-console-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .admin-console-form .form-control,
-  .admin-console-form .primary-button,
-  .admin-console-form .status-message {
-    width: 100%;
+    grid-template-columns: 1fr;
   }
 
   .admin-console-form .primary-button {
-    align-self: stretch;
+    width: 100%;
   }
 
   .admin-console-profile {
