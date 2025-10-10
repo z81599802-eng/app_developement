@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiLogOut, FiMenu, FiSidebar, FiX } from 'react-icons/fi';
 import { LuIndianRupee, LuLayoutDashboard, LuTrendingUp } from 'react-icons/lu';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.svg';
+import BrandLogo from './BrandLogo.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -56,8 +56,8 @@ const Sidebar = memo(
       <aside className={sidebarClassName}>
         <div className="sidebar-top">
           {(!collapsed || isMobile) && (
-            <div className="sidebar-brand" aria-label="Application logo">
-              <img src={logo} alt="App logo" className="sidebar-logo" loading="lazy" />
+            <div className="sidebar-brand" aria-label="Dashvio">
+              <BrandLogo className="sidebar-logo" to="/pricing" ariaLabel="Dashvio" />
             </div>
           )}
 
@@ -338,8 +338,8 @@ const DashboardLayout = () => {
     <div className={shellClassName}>
       {isMobileViewport && (
         <header className="dashboard-mobile-header">
-          <div className="mobile-header-logo" aria-label="Application logo">
-            <img src={logo} alt="App logo" loading="lazy" />
+          <div className="mobile-header-logo" aria-label="Dashvio">
+            <BrandLogo className="sidebar-logo" to="/pricing" ariaLabel="Dashvio" />
           </div>
 
           <button
