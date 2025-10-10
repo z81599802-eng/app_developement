@@ -293,14 +293,70 @@ const AdminCreateUserAccountPageComponent = () => {
           throw new Error(data.message || 'Unable to save link.');
         }
 
+        const normalizedPage = linkForm.page.toLowerCase();
+        const trimmedLink = linkForm.link.trim();
+
         setLinkStatus({ type: 'success', message: 'Dashboard link saved successfully.' });
         setLinkForm((prev) => ({ page: prev.page, link: '' }));
-        refreshSelectedUser(selectedUser.email);
+
+        const updateLinks = (links) => {
+          const currentLinks = Array.isArray(links) ? [...links] : [];
+          const existingIndex = currentLinks.findIndex(
+            (item) => item.page?.toLowerCase() === normalizedPage
+          );
+
+          if (existingIndex >= 0) {
+            currentLinks[existingIndex] = {
+              ...currentLinks[existingIndex],
+              page: normalizedPage,
+              link: trimmedLink
+            };
+          } else {
+            currentLinks.push({ page: normalizedPage, link: trimmedLink });
+          }
+
+          return currentLinks;
+        };
+
+        const selectedEmail = selectedUser.email.toLowerCase();
+
+        setSelectedUser((previous) => {
+          if (!previous || previous.email.toLowerCase() !== selectedEmail) {
+            return previous;
+          }
+
+          return {
+            ...previous,
+            links: updateLinks(previous.links)
+          };
+        });
+
+        setSearchResults((previousResults) =>
+          previousResults.map((user) =>
+            user.email.toLowerCase() === selectedEmail
+              ? {
+                  ...user,
+                  links: updateLinks(user.links)
+                }
+              : user
+          )
+        );
+
+        await refreshSelectedUser(selectedUser.email);
       } catch (error) {
         setLinkStatus({ type: 'error', message: error.message });
       }
     },
-    [adminBaseUrl, linkForm.page, linkForm.link, redirectToLogin, refreshSelectedUser, resolveAdminToken, selectedUser]
+    [
+      adminBaseUrl,
+      linkForm.page,
+      linkForm.link,
+      redirectToLogin,
+      refreshSelectedUser,
+      resolveAdminToken,
+      selectedUser,
+      setSearchResults
+    ]
   );
 
   const handleNewUserChange = useCallback((event) => {

@@ -220,16 +220,17 @@ export const searchUsers = async (req, res) => {
       );
 
       linksByEmail = links.reduce((accumulator, row) => {
-        const list = accumulator.get(row.email) || [];
+        const key = row.email?.toLowerCase() || row.email;
+        const list = accumulator.get(key) || [];
         list.push({ page: row.page, link: row.link, createdAt: row.createdAt });
-        accumulator.set(row.email, list);
+        accumulator.set(key, list);
         return accumulator;
       }, new Map());
     }
 
     const results = users.map((user) => ({
       ...user,
-      links: linksByEmail.get(user.email) || []
+      links: linksByEmail.get(user.email?.toLowerCase()) || []
     }));
 
     userSearchCache.set(normalizedQuery, results);
