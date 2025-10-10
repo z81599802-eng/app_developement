@@ -15,6 +15,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPassword.jsx'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLogin.jsx'));
 const AdminSignupPage = lazy(() => import('./pages/AdminSignup.jsx'));
 const AdminCreateUserAccountPage = lazy(() => import('./pages/AdminCreateUserAccount.jsx'));
+const PricingPage = lazy(() => import('./pages/Pricing.jsx'));
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin/signup" element={<AdminSignupPage />} />

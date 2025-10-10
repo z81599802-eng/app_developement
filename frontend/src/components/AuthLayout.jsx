@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
-import logo from '../assets/logo.svg';
+import BrandLogo from './BrandLogo.jsx';
 import loginImage from '../assets/login-image.svg';
 
 const AuthLayout = ({
@@ -13,9 +12,7 @@ const AuthLayout = ({
   return (
     <div className="auth-container">
       <div className="auth-brand-logo">
-        <Link to="/">
-          <img src={logo} alt="Demo logo" />
-        </Link>
+        <BrandLogo to="/pricing" ariaLabel="Dashvio home" />
       </div>
       <div className="auth-illustration">
         <img src={illustrationSrc} alt="Authentication illustration" />
@@ -23,9 +20,7 @@ const AuthLayout = ({
       <div className="auth-form">
         <div className="auth-card">
           <div className="auth-form-logo">
-            <Link to="/">
-              <img src={logo} alt="Demo logo" />
-            </Link>
+            <BrandLogo to="/pricing" ariaLabel="Dashvio home" />
           </div>
           <div className="auth-header">
             <h1>{title}</h1>
