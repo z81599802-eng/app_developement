@@ -298,6 +298,24 @@ const DashboardLayout = () => {
     updateMobileMenu(false);
   }, [updateMobileMenu]);
 
+  useEffect(() => {
+    if (!isMobileViewport || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const { body } = document;
+
+    if (isMobileMenuOpen) {
+      body.style.setProperty('overflow', 'hidden');
+    } else {
+      body.style.removeProperty('overflow');
+    }
+
+    return () => {
+      body.style.removeProperty('overflow');
+    };
+  }, [isMobileMenuOpen, isMobileViewport]);
+
   useEffect(
     () => () => {
       if (collapseAnimationRef.current) {
@@ -354,15 +372,64 @@ const DashboardLayout = () => {
         </header>
       )}
 
-      <Sidebar
-        collapsed={collapsedForDesktop}
-        isMobile={isMobileViewport}
-        isMobileMenuOpen={isMobileMenuOpen}
-        navItems={navItems}
-        onToggle={handleToggle}
-        onLogout={handleLogout}
-        onCloseMobileMenu={handleCloseMobileMenu}
-      />
+      {!isMobileViewport && (
+        <Sidebar
+          collapsed={collapsedForDesktop}
+          isMobile={isMobileViewport}
+          isMobileMenuOpen={isMobileMenuOpen}
+          navItems={navItems}
+          onToggle={handleToggle}
+          onLogout={handleLogout}
+          onCloseMobileMenu={handleCloseMobileMenu}
+        />
+      )}
+
+      {isMobileViewport && (
+        <div
+          className={`dashboard-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}
+          aria-hidden={!isMobileMenuOpen}
+        >
+          <div className="dashboard-mobile-menu-header">
+            <BrandLogo className="sidebar-logo" to="/pricing" ariaLabel="Dashvio" />
+            <button
+              type="button"
+              className="dashboard-mobile-close"
+              onClick={handleCloseMobileMenu}
+              aria-label="Close sidebar menu"
+            >
+              <FiX aria-hidden="true" />
+            </button>
+          </div>
+
+          <nav className="dashboard-mobile-nav" aria-label="Dashboard navigation">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === '/dashboard'}
+                  className={({ isActive }) => `dashboard-mobile-link ${isActive ? 'active' : ''}`}
+                  onClick={handleCloseMobileMenu}
+                >
+                  <span className="dashboard-mobile-icon" aria-hidden="true">
+                    <Icon />
+                  </span>
+                  <span className="dashboard-mobile-label">{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          <button type="button" className="dashboard-mobile-logout" onClick={handleLogout}>
+            <span className="dashboard-mobile-icon" aria-hidden="true">
+              <FiLogOut />
+            </span>
+            <span className="dashboard-mobile-label">Logout</span>
+          </button>
+        </div>
+      )}
 
       {isMobileViewport && (
         <div

@@ -94,6 +94,14 @@ const Pricing = () => {
           </button>
         </div>
         <div className={`pricing-mobile-menu ${isMenuOpen ? 'open' : ''}`}>
+          <button
+            type="button"
+            className="pricing-mobile-close"
+            onClick={closeMenu}
+            aria-label="Close navigation menu"
+          >
+            <FiX aria-hidden="true" />
+          </button>
           <nav className="pricing-mobile-nav" aria-label="Mobile navigation">
             {navigationItems.map((link) => (
               <a
@@ -134,11 +142,6 @@ const Pricing = () => {
                   aria-pressed={billingCycle === option}
                 >
                   {option}
-                  {option === 'YEARLY' && (
-                    <span className="billing-note" aria-hidden="true">
-                      Best Value!
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
