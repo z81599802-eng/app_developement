@@ -4,6 +4,31 @@ import BrandLogo from '../components/BrandLogo.jsx';
 
 const BILLING_OPTIONS = ['MONTHLY', 'QUARTERLY', 'YEARLY'];
 
+const PLAN_DETAILS = {
+  MONTHLY: {
+    duration: '1 Month',
+    price: '₹999/mo'
+  },
+  QUARTERLY: {
+    duration: '3 Months',
+    price: '₹316.35/mo'
+  },
+  YEARLY: {
+    duration: '12 Months',
+    price: '₹74.91/mo'
+  }
+};
+
+const PLAN_FEATURES = [
+  'insights of sales and revenue',
+  'returns and settlements',
+  'overview of account health',
+  'Unlimited feature flags',
+  'Web Experimentation',
+  'Access to community and academy',
+  'overall highlights and low lights of your account'
+];
+
 const navLinks = [
   { label: 'Home', href: '/login' },
   { label: 'Solutions', href: '#' },
@@ -15,6 +40,8 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState('YEARLY');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [displayCycle, setDisplayCycle] = useState('YEARLY');
+  const [transitionState, setTransitionState] = useState('visible');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,6 +88,39 @@ const Pricing = () => {
   const handleOptionClick = (option) => {
     setBillingCycle(option);
   };
+
+  useEffect(() => {
+    if (billingCycle !== displayCycle && transitionState === 'visible') {
+      setTransitionState('fade-out');
+    }
+  }, [billingCycle, displayCycle, transitionState]);
+
+  useEffect(() => {
+    let timeoutId;
+
+    if (transitionState === 'fade-out') {
+      timeoutId = setTimeout(() => {
+        setDisplayCycle(billingCycle);
+        setTransitionState('pre-fade-in');
+      }, 260);
+    } else if (transitionState === 'pre-fade-in') {
+      timeoutId = setTimeout(() => {
+        setTransitionState('fade-in');
+      }, 20);
+    } else if (transitionState === 'fade-in') {
+      timeoutId = setTimeout(() => {
+        setTransitionState('visible');
+      }, 20);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [transitionState, billingCycle]);
+
+  const planDetails = PLAN_DETAILS[displayCycle];
 
   return (
     <div className="pricing-page">
@@ -146,8 +206,35 @@ const Pricing = () => {
               ))}
             </div>
           </div>
-          <div className="pricing-hero-visual" aria-hidden="true">
+          <div className="pricing-hero-visual animated-bg" aria-hidden="true">
             <div className="pricing-ribbons" />
+          </div>
+        </section>
+        <section className="pricing-plan-section" aria-live="polite">
+          <div className="pricing-plan-area">
+            <article className={`pricing-plan-card ${transitionState}`}>
+              <header className="pricing-plan-header">
+                <h2>{planDetails.duration}</h2>
+                <p className="pricing-plan-subtext">Starting at</p>
+              </header>
+              <div className="pricing-plan-middle">
+                <p className="pricing-plan-price">{planDetails.price}</p>
+                <button type="button" className="pricing-card-cta">
+                  Contact Sales
+                </button>
+              </div>
+              <div className="pricing-plan-features">
+                <p className="pricing-plan-included">What's included:</p>
+                <ul className="pricing-plan-feature-list">
+                  {PLAN_FEATURES.map((feature) => (
+                    <li key={feature} className="feature">
+                      <span aria-hidden="true">✓</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
           </div>
         </section>
       </main>
